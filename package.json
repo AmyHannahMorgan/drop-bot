@@ -1,0 +1,19 @@
+{
+  "name": "drop-bot",
+  "version": "0.0.0",
+  "description": "simple twitch chat bot that allows for drag and drop command installation",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AmyHannahMorgan/drop-bot.git"
+  },
+  "author": "Amy Hannah Morgan",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AmyHannahMorgan/drop-bot/issues"
+  },
+  "homepage": "https://github.com/AmyHannahMorgan/drop-bot#readme"
+}
