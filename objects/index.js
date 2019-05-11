@@ -17,11 +17,44 @@ class CommandHandler {
   execCommand(commandObject, context, remainder) {
     let time = Date.now()
     if (time > commandObject.rateLimit) {
-      commandObject.function(context, remainder);
-      commandObject.rateLimit = Date.now() + commandObject.rateLimitTime;
+      if (this.handlePerms(commandObject, context)) {
+        commandObject.function(context, remainder);
+        commandObject.rateLimit = Date.now() + commandObject.rateLimitTime;
+      }
+      else {
+        this.client.say(`${context.channel}`, `I'm sorry but you do not have permission to use the command ${commandObject.name}`);
+      }
     }
     else {
       this.client.say(`${context.channel}`, `I'm sorry but the command ${commandObject.name} is rate limited, please wait ${this.parseTime(commandObject.rateLimit - time)} before calling it again`);
+    }
+  }
+
+  handlePerms(commandObject, context) {
+    let reqPerm = commandObject.perms;
+    switch (reqPerm) {
+      case 0:
+          return true
+        break;
+      case 1:
+        if (context.user.mod || context.user.badges.broadcaster === '1') {
+          return true;
+        }
+        else {
+          return false
+        }
+        break;
+      case 2:
+        if (context.user.badges.broadcaster === '1') {
+          return true;
+        }
+        else {
+          return false;
+        }
+        break;
+      case 3:
+        return false;
+        break;
     }
   }
 
