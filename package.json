@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/AmyHannahMorgan/drop-bot/issues"
   },
-  "homepage": "https://github.com/AmyHannahMorgan/drop-bot#readme"
+  "homepage": "https://github.com/AmyHannahMorgan/drop-bot#readme",
+  "dependencies": {
+    "irc": "^0.5.2"
+  }
 }
