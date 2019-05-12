@@ -1,15 +1,28 @@
+const fs = require('fs');
+const pathModule = require('path');
+const staticModuleHolder = [];
+
 const tmi = require('tmi.js');
 const ops = require('./options/');
+
 const objects = require('./objects/');
-const echo = require('./static-commands/echo');
 
-const client = new tmi.client(ops);
-let staticCommands = [];
-staticCommands.push(new objects.CommandObject(client, echo.options, echo.func));
-const commandHandler = new objects.CommandHandler(client, staticCommands);
-client.connect();
+const dir = pathModule.join(__dirname, 'static-commands');
+let commandHandler = null, client = null;
+console.log(dir);
+loadModules(dir, staticModuleHolder, () => {
+  client = new tmi.client(ops);
 
-client.on('message', messageHandler);
+  let staticCommands = [];
+  for (var i = 0; i < staticModuleHolder.length; i++) {
+    staticCommands.push(new objects.CommandObject(client, staticModuleHolder[i].options, staticModuleHolder[i].func));
+  }
+  commandHandler = new objects.CommandHandler(client, staticCommands);
+
+  client.connect();
+
+  client.on('message', messageHandler);
+});
 
 function messageHandler(channel, user, msg, self) {
   if(self) return;
@@ -30,4 +43,15 @@ function messageHandler(channel, user, msg, self) {
   if((msg.toLowerCase()).includes(`@${client.username}`)) {
     client.say(`${channel}`, `hello @${user.username}`);
   }
+}
+
+function loadModules(path, holder, callback) {
+  fs.readdir(path, (err, files) => {
+    let f;
+    for (let i = 0; i < files.length; i++) {
+      f = pathModule.join(path, files[i])
+      holder.push(require(f));
+    }
+    callback();
+  });
 }

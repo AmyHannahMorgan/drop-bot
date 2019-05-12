@@ -1,7 +1,7 @@
 const options = {
   commandName : 'echo',
-  perms: 0,
-  rateLimitTime: 10000
+  perms: 2,
+  rateLimitTime: 0
 };
 
 function func(context, remainder) {
