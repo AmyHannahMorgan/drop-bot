@@ -1,0 +1,2 @@
+#ignore index of options to protect credentials
+options/index.js
