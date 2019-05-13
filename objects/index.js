@@ -30,6 +30,14 @@ class CommandHandler {
     }
   }
 
+  add(mod) {
+    console.log(mod);
+  }
+
+  update(mod) {
+    console.log(mod);
+  }
+
   handlePerms(commandObject, context) {
     let reqPerm = commandObject.perms;
     switch (reqPerm) {
