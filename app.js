@@ -96,10 +96,8 @@ function messageHandler(channel, user, msg, self) {
     let msgSplit = msgClone.split(' ');
     let command = msgSplit.shift().replace('!', '', 1);
     msgClone = msgSplit.join(' ');
-    let commandObject = commandHandler.findCommand(command, {channel, user, self});
-    if (commandObject !== null) {
-      commandHandler.execCommand(commandObject, {channel, user, self}, msgClone);
-    }
+    
+    commandHandler.execCommand(command, {channel, user, self}, msgClone);
   }
 
   if((msg.toLowerCase()).includes(`@${client.username}`)) {

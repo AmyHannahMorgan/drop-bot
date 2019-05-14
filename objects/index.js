@@ -4,30 +4,37 @@ class CommandHandler {
     this.commands = [...staticCommands];
   }
 
-  findCommand(commandName, context) {
+  findCommand(commandName) {
     for(let i = 0; i < this.commands.length; i++) {
       if (this.commands[i].name === commandName) {
         return this.commands[i];
       }
     }
-    this.client.say(`${context.channel}`, `I'm sorry but I couldn't find the command '${commandName}'`)
     return null;
   }
 
-  execCommand(commandObject, context, remainder) {
+  execCommand(commandName, context, remainder) {
+    let commandObject = this.findCommand(commandName);
     let time = Date.now()
-    if (time > commandObject.rateLimit) {
-      if (this.handlePerms(commandObject, context)) {
-        commandObject.function(context, remainder);
-        commandObject.rateLimit = Date.now() + commandObject.rateLimitTime;
+
+    if (commandObject !== null) {
+      if (time > commandObject.rateLimit) {
+        if (this.handlePerms(commandObject, context)) {
+          commandObject.function(context, remainder);
+          commandObject.rateLimit = Date.now() + commandObject.rateLimitTime;
+        }
+        else {
+          this.client.say(`${context.channel}`, `I'm sorry but you do not have permission to use the command ${commandObject.name}`);
+        }
       }
       else {
-        this.client.say(`${context.channel}`, `I'm sorry but you do not have permission to use the command ${commandObject.name}`);
+        this.client.say(`${context.channel}`, `I'm sorry but the command ${commandObject.name} is rate limited, please wait ${this.parseTime(commandObject.rateLimit - time)} before calling it again`);
       }
     }
     else {
-      this.client.say(`${context.channel}`, `I'm sorry but the command ${commandObject.name} is rate limited, please wait ${this.parseTime(commandObject.rateLimit - time)} before calling it again`);
+      this.client.say(`${context.channel}`, `I'm sorry but I couldn't find the command '${commandName}'`);
     }
+
   }
 
   handlePerms(commandObject, context) {
@@ -114,7 +121,9 @@ class CommandHandler {
   }
 
   update(mod) {
-    console.log(mod);
+    if (this.checkModule(mod)) {
+
+    }
   }
 
   checkModule(mod) {
