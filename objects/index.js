@@ -13,6 +13,15 @@ class CommandHandler {
     return null;
   }
 
+  findCommandOrigin(origin) {
+    for (let i = 0; i < this.commands.length; i++) {
+      if (this.commands[i].origin.includes(origin) || origin.includes(this.commands[i].origin)) {
+        console.log(this.commands[i]);
+        return i
+      }
+    }
+  }
+
   execCommand(commandName, context, remainder) {
     let commandObject = this.findCommand(commandName);
     let time = Date.now()
@@ -127,13 +136,19 @@ class CommandHandler {
 
   update(mod, origin) {
     if (this.checkModule(mod, origin)) {
-      let commandObj = this.findCommand(mod.options.commandName)
+      let commandObj = this.findCommand(mod.options.commandName);
       if (commandObj !== null) {
-        if (commandObj.origin === origin) {
-          console.log({commandObj, origin});
+        if (origin.includes(commandObj.origin) || commandObj.origin.includes(origin)) {
+          commandObj.update(mod.options, mod.func);
+          console.log({commandObj});
         }
       }
     }
+  }
+
+  remove(origin) {
+    let index = this.findCommandOrigin(origin);
+    this.commands.splice(index, 1);
   }
 
   checkModule(mod, origin) {
@@ -240,6 +255,16 @@ class CommandObject {
     this.function = func;
 
     this.origin = origin;
+  }
+
+  update(options, func) {
+    console.log({options, func});
+    this.name = options.commandName;
+    this.rateLimitTime = options.rateLimitTime;
+    this.rateLimit = 0;
+    this.perms = options.perms;
+
+    this.function = func;
   }
 }
 

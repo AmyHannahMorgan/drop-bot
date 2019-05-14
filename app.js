@@ -35,8 +35,12 @@ loadModules(commandModulesPath, commandModules, () => {
   for (let i = 0; i < commandModules.length; i++) {
     commandHandler.commands.push(new objects.CommandObject(client, commandModules[i][0].options, commandModules[i][0].func, commandModules[i][1]));
   }
-
-  const commandWatcher = chokidar.watch(options.commandModulesPath, {persistant: true, ignoreInitial: true});
+  const chokidarOptions = {
+    persistant: true,
+    ignoreInitial: true,
+    usePolling: true
+  }
+  const commandWatcher = chokidar.watch(options.commandModulesPath, chokidarOptions);
 
   commandWatcher
     .on('addDir', path => {
@@ -73,12 +77,23 @@ loadModules(commandModulesPath, commandModules, () => {
         if ((path.toLowerCase()).includes('index.js')) {
           try {
             let f = pathModule.join(commandModulesPath, cutPath(path));
+            delete require.cache[require.resolve(f)];
             commandHandler.update(require(f), f);
           } catch (e) {
             console.log(e);
           }
         }
       }
+    })
+    .on('unlink', path => {
+      console.log(`unlink path: ${path}`);
+      let f = pathModule.join(commandModulesPath, cutPath(path));
+      commandHandler.remove(f);
+    })
+    .on('unlinkDir', path => {
+      console.log(`unlink path: ${path}`);
+      let f = pathModule.join(commandModulesPath, cutPath(path));
+      commandHandler.remove(f);
     })
     .on('ready', () => console.log('watcher is ready'));
 
