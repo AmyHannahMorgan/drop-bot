@@ -16,7 +16,7 @@ loadModules(dir, staticModuleHolder, () => {
 
   let staticCommands = [];
   for (var i = 0; i < staticModuleHolder.length; i++) {
-    staticCommands.push(new objects.CommandObject(client, staticModuleHolder[i].options, staticModuleHolder[i].func));
+    staticCommands.push(new objects.CommandObject(client, staticModuleHolder[i][0].options, staticModuleHolder[i][0].func, staticModuleHolder[i][1]));
   }
   commandHandler = new objects.CommandHandler(client, staticCommands);
 });
@@ -33,7 +33,7 @@ const commandModules = [];
 
 loadModules(commandModulesPath, commandModules, () => {
   for (let i = 0; i < commandModules.length; i++) {
-    commandHandler.commands.push(new objects.CommandObject(client, commandModules[i].options, commandModules[i].func));
+    commandHandler.commands.push(new objects.CommandObject(client, commandModules[i][0].options, commandModules[i][0].func, commandModules[i][1]));
   }
 
   const commandWatcher = chokidar.watch(options.commandModulesPath, {persistant: true, ignoreInitial: true});
@@ -46,7 +46,7 @@ loadModules(commandModulesPath, commandModules, () => {
       try {
         if (fs.existsSync(f)) {
           console.log(`${path} contains an index.js file`);
-          commandHandler.add(require(f));
+          commandHandler.add(require(f), f);
         }
       }
       catch (e) {
@@ -59,7 +59,7 @@ loadModules(commandModulesPath, commandModules, () => {
         if ((path.toLowerCase()).includes('index.js')) {
           try {
             let f = pathModule.join(commandModulesPath, cutPath(path));
-            commandHandler.add(require(f));
+            commandHandler.add(require(f), f);
           } catch (e) {
             console.log(e);
           }
@@ -72,8 +72,8 @@ loadModules(commandModulesPath, commandModules, () => {
       if (stats.isFile()) {
         if ((path.toLowerCase()).includes('index.js')) {
           try {
-            let f = pathModule.join(commandModulesPath, cut(path));
-            commandHandler.update(require(f));
+            let f = pathModule.join(commandModulesPath, cutPath(path));
+            commandHandler.update(require(f), f);
           } catch (e) {
             console.log(e);
           }
@@ -113,7 +113,7 @@ function loadModules(path, holder, callback) {
       f = pathModule.join(path, files[i])
       console.log(f);
       try {
-        holder.push(require(f));
+        holder.push([require(f), f]);
       } catch (e) {
         console.log(e);
       }

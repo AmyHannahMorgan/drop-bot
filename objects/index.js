@@ -112,21 +112,31 @@ class CommandHandler {
     return str;
   }
 
-  add(mod) {
-    if (this.checkModule(mod)) {
-      let newCommObject = new CommandObject(this.client, mod.options, mod.func);
-      console.log({newCommObject});
-      this.commands.push(newCommObject);
+  add(mod, origin) {
+    if (this.checkModule(mod, origin)) {
+      if (this.findCommand(mod.options.commandName) === null) {
+        let newCommObject = new CommandObject(this.client, mod.options, mod.func, origin);
+        console.log({newCommObject});
+        this.commands.push(newCommObject);
+      }
+      else {
+        throw `a command with the name '${mod.options.commandName}' already exists`;
+      }
     }
   }
 
-  update(mod) {
-    if (this.checkModule(mod)) {
-
+  update(mod, orgin) {
+    if (this.checkModule(mod, origin)) {
+      let commandObj = this.findCommand(mod.options.commandName)
+      if (commandObj !== null) {
+        if (commandObj.origin === origin) {
+          console.log({commandObj, origin});
+        }
+      }
     }
   }
 
-  checkModule(mod) {
+  checkModule(mod, origin) {
     let optionsCheck, funcCheck;
 
     if ('options' in mod) {
@@ -212,14 +222,14 @@ class CommandHandler {
     }
 
     if (optionsCheck && funcCheck) {
-      console.log('module is fine');
+      console.log(`module '${origin}' is fine`);
       return true
     }
   }
 }
 
 class CommandObject {
-  constructor(client, options, func) {
+  constructor(client, options, func, origin) {
     this.client = client;
 
     this.name = options.commandName;
@@ -228,6 +238,8 @@ class CommandObject {
     this.perms = options.perms;
 
     this.function = func;
+
+    this.origin = origin;
   }
 }
 
