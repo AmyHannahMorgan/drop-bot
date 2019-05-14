@@ -3,21 +3,99 @@ const pathModule = require('path');
 const staticModuleHolder = [];
 
 const tmi = require('tmi.js');
-const ops = require('./options/');
+const options = require('./options/');
+
+const chokidar = require('chokidar');
 
 const objects = require('./objects/');
 
 const dir = pathModule.join(__dirname, 'static-commands');
 let commandHandler = null, client = null;
-console.log(dir);
 loadModules(dir, staticModuleHolder, () => {
-  client = new tmi.client(ops);
+  client = new tmi.client(options.tmiOptions);
 
   let staticCommands = [];
   for (var i = 0; i < staticModuleHolder.length; i++) {
-    staticCommands.push(new objects.CommandObject(client, staticModuleHolder[i].options, staticModuleHolder[i].func));
+    staticCommands.push(new objects.CommandObject(client, staticModuleHolder[i][0].options, staticModuleHolder[i][0].func, staticModuleHolder[i][1]));
   }
   commandHandler = new objects.CommandHandler(client, staticCommands);
+});
+
+let commandModulesPath;
+if (pathModule.isAbsolute(options.commandModulesPath)) {
+  commandModulesPath = options.commandModulesPath;
+}
+else {
+  commandModulesPath = pathModule.join(__dirname, options.commandModulesPath);
+}
+
+const commandModules = [];
+
+loadModules(commandModulesPath, commandModules, () => {
+  for (let i = 0; i < commandModules.length; i++) {
+    commandHandler.commands.push(new objects.CommandObject(client, commandModules[i][0].options, commandModules[i][0].func, commandModules[i][1]));
+  }
+  const chokidarOptions = {
+    persistant: true,
+    ignoreInitial: true,
+    usePolling: true
+  }
+  const commandWatcher = chokidar.watch(options.commandModulesPath, chokidarOptions);
+
+  commandWatcher
+    .on('addDir', path => {
+      console.log(`directory: ${path} was added to ${options.commandModulesPath}`);
+      let f = pathModule.join(commandModulesPath, cutPath(path), 'index.js');
+      console.log(f);
+      try {
+        if (fs.existsSync(f)) {
+          console.log(`${path} contains an index.js file`);
+          commandHandler.add(require(f), f);
+        }
+      }
+      catch (e) {
+        console.log(e);
+      }
+    })
+    .on('add', (path, stats) => {
+      console.log({path, stats});
+      if (stats.isFile()) {
+        if ((path.toLowerCase()).includes('index.js')) {
+          try {
+            let f = pathModule.join(commandModulesPath, cutPath(path));
+            commandHandler.add(require(f), f);
+          } catch (e) {
+            console.log(e);
+          }
+        }
+      }
+    })
+    .on('change', (path, stats) => {
+      console.log(`${path} changed`);
+      console.log({path, stats});
+      if (stats.isFile()) {
+        if ((path.toLowerCase()).includes('index.js')) {
+          try {
+            let f = pathModule.join(commandModulesPath, cutPath(path));
+            delete require.cache[require.resolve(f)];
+            commandHandler.update(require(f), f);
+          } catch (e) {
+            console.log(e);
+          }
+        }
+      }
+    })
+    .on('unlink', path => {
+      console.log(`unlink path: ${path}`);
+      let f = pathModule.join(commandModulesPath, cutPath(path));
+      commandHandler.remove(f);
+    })
+    .on('unlinkDir', path => {
+      console.log(`unlink path: ${path}`);
+      let f = pathModule.join(commandModulesPath, cutPath(path));
+      commandHandler.remove(f);
+    })
+    .on('ready', () => console.log('watcher is ready'));
 
   client.connect();
 
@@ -34,10 +112,8 @@ function messageHandler(channel, user, msg, self) {
     let msgSplit = msgClone.split(' ');
     let command = msgSplit.shift().replace('!', '', 1);
     msgClone = msgSplit.join(' ');
-    let commandObject = commandHandler.findCommand(command, {channel, user, self});
-    if (commandObject !== null) {
-      commandHandler.execCommand(commandObject, {channel, user, self}, msgClone);
-    }
+
+    commandHandler.execCommand(command, {channel, user, self}, msgClone);
   }
 
   if((msg.toLowerCase()).includes(`@${client.username}`)) {
@@ -50,8 +126,26 @@ function loadModules(path, holder, callback) {
     let f;
     for (let i = 0; i < files.length; i++) {
       f = pathModule.join(path, files[i])
-      holder.push(require(f));
+      console.log(f);
+      try {
+        holder.push([require(f), f]);
+      } catch (e) {
+        console.log(e);
+      }
+
     }
     callback();
   });
+}
+
+function cutPath(path) {
+  let cutIndex = path.indexOf('\\');
+
+  if (cutIndex !== -1) {
+    return path.slice(cutIndex);
+  }
+  else {
+    cutIndex = path.indexOf('/');
+    return path.slice(cutIndex);
+  }
 }
