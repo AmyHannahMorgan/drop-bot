@@ -30,14 +30,6 @@ class CommandHandler {
     }
   }
 
-  add(mod) {
-    console.log(mod);
-  }
-
-  update(mod) {
-    console.log(mod);
-  }
-
   handlePerms(commandObject, context) {
     let reqPerm = commandObject.perms;
     switch (reqPerm) {
@@ -111,6 +103,109 @@ class CommandHandler {
     }
 
     return str;
+  }
+
+  add(mod) {
+    if (this.checkModule(mod)) {
+      let newCommObject = new CommandObject(this.client, mod.options, mod.func);
+      console.log({newCommObject});
+      this.commands.push(newCommObject);
+    }
+  }
+
+  update(mod) {
+    console.log(mod);
+  }
+
+  checkModule(mod) {
+    let optionsCheck, funcCheck;
+
+    if ('options' in mod) {
+      if (typeof mod.options === 'object') {
+        let hasPerms = 'perms' in mod.options,
+        hasRateLimitTime = 'rateLimitTime' in mod.options,
+        hasCommandName = 'commandName' in mod.options;
+
+        if (hasPerms && hasRateLimitTime && hasCommandName) {
+          let permsType = typeof mod.options.perms === 'number' && mod.options.perms >= 0 && mod.options.perms <4,
+          rateLimitType = typeof mod.options.rateLimitTime === 'number',
+          commandNameType = typeof mod.options.commandName === 'string';
+
+          if (permsType && rateLimitType && commandNameType) {
+            if (!(mod.options.commandName.includes(' '))) {
+              optionsCheck = true;
+            }
+            else {
+              throw 'commandName cannot contain spaces';
+              return false;
+            }
+          }
+          else {
+            let errorMsg = '';
+
+            if (!permsType) {
+              errorMsg += 'perms must be a number between 0 and 3 (inclusive) \n';
+            }
+
+            if (!rateLimitType) {
+              errorMsg += 'rateLimitTime must be a number \n';
+            }
+
+            if (!commandNameType) {
+              errorMsg += 'commandName must be a string \n';
+            }
+
+            throw errorMsg;
+            return false;
+          }
+        }
+        else {
+          let errorMsg = '';
+
+          if (!hasPerms) {
+            errorMsg += 'options in command module is missing perms key \n';
+          }
+
+          if (!hasRateLimitTime) {
+            errorMsg += 'options in command module is missing rateLimitTime key \n';
+          }
+
+          if (!hasCommandName) {
+            errorMsg += 'options in command module is missing commandName key \n';
+          }
+
+          throw errorMsg;
+          return false;
+        }
+      }
+      else {
+        throw 'options is not an object';
+        return false;
+      }
+    }
+    else {
+      throw 'options object is not present in command module';
+      return false;
+    }
+
+    if ('func' in mod) {
+      if (typeof mod.func === 'function') {
+        funcCheck = true;
+      }
+      else {
+        throw 'module func must be a function'
+        return false;
+      }
+    }
+    else {
+      throw 'func function is not present in command module';
+      return false;
+    }
+
+    if (optionsCheck && funcCheck) {
+      console.log('module is fine');
+      return true
+    }
   }
 }
 
