@@ -41,7 +41,7 @@ loadModules(commandModulesPath, commandModules, () => {
   commandWatcher
     .on('addDir', path => {
       console.log(`directory: ${path} was added to ${options.commandModulesPath}`);
-      let f = pathModule.join(__dirname, path, 'index.js');
+      let f = pathModule.join(commandModulesPath, cutPath(path), 'index.js');
       console.log(f);
       try {
         if (fs.existsSync(f)) {
@@ -58,7 +58,7 @@ loadModules(commandModulesPath, commandModules, () => {
       if (stats.isFile()) {
         if ((path.toLowerCase()).includes('index.js')) {
           try {
-            let f = pathModule.join(__dirname, path);
+            let f = pathModule.join(commandModulesPath, cutPath(path));
             commandHandler.add(require(f));
           } catch (e) {
             console.log(e);
@@ -67,11 +67,12 @@ loadModules(commandModulesPath, commandModules, () => {
       }
     })
     .on('change', (path, stats) => {
+      console.log(`${path} changed`);
       console.log({path, stats});
       if (stats.isFile()) {
         if ((path.toLowerCase()).includes('index.js')) {
           try {
-            let f = pathModule.join(__dirname, path);
+            let f = pathModule.join(commandModulesPath, cut(path));
             commandHandler.update(require(f));
           } catch (e) {
             console.log(e);
@@ -96,7 +97,7 @@ function messageHandler(channel, user, msg, self) {
     let msgSplit = msgClone.split(' ');
     let command = msgSplit.shift().replace('!', '', 1);
     msgClone = msgSplit.join(' ');
-    
+
     commandHandler.execCommand(command, {channel, user, self}, msgClone);
   }
 
@@ -111,8 +112,25 @@ function loadModules(path, holder, callback) {
     for (let i = 0; i < files.length; i++) {
       f = pathModule.join(path, files[i])
       console.log(f);
-      holder.push(require(f));
+      try {
+        holder.push(require(f));
+      } catch (e) {
+        console.log(e);
+      }
+
     }
     callback();
   });
+}
+
+function cutPath(path) {
+  let cutIndex = path.indexOf('\\');
+
+  if (cutIndex !== -1) {
+    return path.slice(cutIndex);
+  }
+  else {
+    cutIndex = path.indexOf('/');
+    return path.slice(cutIndex);
+  }
 }
