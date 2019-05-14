@@ -125,7 +125,7 @@ class CommandHandler {
     }
   }
 
-  update(mod, orgin) {
+  update(mod, origin) {
     if (this.checkModule(mod, origin)) {
       let commandObj = this.findCommand(mod.options.commandName)
       if (commandObj !== null) {
