@@ -12,7 +12,7 @@ const tmiOptions = {
     secure: true // if true uses a secure connection to the server
   },
   identity: {
-    username: '', // the username of the bot
+    username: 'im_a_bot', // the username of the bot
     password: 'oauth:randomchars' // oauth authentification for the bot
   },
   channels: [] // array of channels to join (strings)
