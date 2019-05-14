@@ -20,8 +20,18 @@ loadModules(dir, staticModuleHolder, () => {
   }
   commandHandler = new objects.CommandHandler(client, staticCommands);
 });
-let commandModules = [];
-loadModules(options.commandModulesPath, commandModules, () => {
+
+let commandModulesPath;
+if (pathModule.isAbsolute(options.commandModulesPath)) {
+  commandModulesPath = options.commandModulesPath;
+}
+else {
+  commandModulesPath = pathModule.join(__dirname, options.commandModulesPath);
+}
+
+const commandModules = [];
+
+loadModules(commandModulesPath, commandModules, () => {
   for (let i = 0; i < commandModules.length; i++) {
     commandHandler.commands.push(new objects.CommandObject(client, commandModules[i].options, commandModules[i].func));
   }
@@ -102,6 +112,7 @@ function loadModules(path, holder, callback) {
     let f;
     for (let i = 0; i < files.length; i++) {
       f = pathModule.join(path, files[i])
+      console.log(f);
       holder.push(require(f));
     }
     callback();
